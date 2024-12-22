@@ -1,4 +1,3 @@
-// components/ProductForm.js
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ReactQuill from "react-quill";
@@ -6,9 +5,25 @@ import "react-quill/dist/quill.snow.css";
 import { useState } from "react";
 import axios from "axios";
 
+
 const ProductForm = ({ product }) => {
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState(product ? product.imageUrl : "");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    const validFormats = ["image/jpeg", "image/png"];
+    if (file && !validFormats.includes(file.type)) {
+      alert("Only JPEG and PNG formats are allowed");
+    } else if (file && file.size > 2 * 1024 * 1024) {
+      alert("File size exceeds 2MB");
+    } else {
+      setImage(file);
+      setImageUrl(URL.createObjectURL(file));
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -24,27 +39,31 @@ const ProductForm = ({ product }) => {
         .positive("Must be a positive number"),
     }),
     onSubmit: async (values) => {
-      let imageUrl = product ? product.imageUrl : "";
-
-      if (image) {
-        const formData = new FormData();
-        formData.append("file", image);
-        const uploadRes = await axios.post("/api/upload", formData);
-        imageUrl = uploadRes.data.filePath;
+      setError("");
+      setIsLoading(true);
+      try {
+        let imageUrl = product ? product.imageUrl : "";
+        if (image) {
+          const formData = new FormData();
+          formData.append("file", image);
+          const uploadRes = await axios.post("/api/upload", formData);
+          imageUrl = uploadRes.data.filePath;
+        }
+        const newProduct = {
+          ...values,
+          imageUrl,
+        };
+        if (product) {
+          await axios.put(`/api/products/${product._id}`, newProduct);
+        } else {
+          await axios.post("/api/products", newProduct);
+        }
+        alert("Product saved!");
+      } catch (err) {
+        setError("Failed to save product. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
-
-      const newProduct = {
-        ...values,
-        imageUrl,
-      };
-
-      if (product) {
-        await axios.put(`/api/products/${product._id}`, newProduct);
-      } else {
-        await axios.post("/api/products", newProduct);
-      }
-
-      alert("Product saved!");
     },
   });
 
@@ -54,10 +73,7 @@ const ProductForm = ({ product }) => {
       className="space-y-6 p-8 max-w-lg mx-auto bg-white rounded-lg shadow-md"
     >
       <div>
-        <label
-          htmlFor="name"
-          className="block text-lg font-semibold text-gray-700"
-        >
+        <label htmlFor="name" className="block text-lg font-semibold text-gray-700">
           Product Name
         </label>
         <input
@@ -76,10 +92,7 @@ const ProductForm = ({ product }) => {
       </div>
 
       <div>
-        <label
-          htmlFor="description"
-          className="block text-lg font-semibold text-gray-700"
-        >
+        <label htmlFor="description" className="block text-lg font-semibold text-gray-700">
           Description
         </label>
         <ReactQuill
@@ -88,17 +101,12 @@ const ProductForm = ({ product }) => {
           className="mt-2 w-full border border-gray-300 rounded-md"
         />
         {formik.touched.description && formik.errors.description ? (
-          <div className="text-red-500 text-sm mt-1">
-            {formik.errors.description}
-          </div>
+          <div className="text-red-500 text-sm mt-1">{formik.errors.description}</div>
         ) : null}
       </div>
 
       <div>
-        <label
-          htmlFor="price"
-          className="block text-lg font-semibold text-gray-700"
-        >
+        <label htmlFor="price" className="block text-lg font-semibold text-gray-700">
           Price
         </label>
         <input
@@ -117,33 +125,31 @@ const ProductForm = ({ product }) => {
       </div>
 
       <div>
-        <label
-          htmlFor="image"
-          className="block text-lg font-semibold text-gray-700"
-        >
+        <label htmlFor="image" className="block text-lg font-semibold text-gray-700">
           Upload Product Image
         </label>
         <input
           id="image"
           type="file"
-          onChange={(e) => setImage(e.target.files[0])}
+          onChange={handleImageChange}
           className="mt-2 block w-full text-sm text-gray-700 border border-gray-300 rounded-md"
         />
         {imageUrl && (
-          <img
-            src={imageUrl}
-            alt="Product"
-            className="mt-4 w-40 h-auto rounded-md"
-          />
+          <img src={imageUrl} alt="Product" className="mt-4 w-40 h-auto rounded-md" />
         )}
       </div>
+
+      {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
 
       <div className="flex justify-center">
         <button
           type="submit"
-          className="mt-4 px-6 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-md"
+          className={`mt-4 px-6 py-2 text-white rounded-md shadow-md ${
+            isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          }`}
+          disabled={isLoading}
         >
-          Save Product
+          {isLoading ? "Saving..." : "Save Product"}
         </button>
       </div>
     </form>

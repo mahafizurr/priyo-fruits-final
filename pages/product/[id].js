@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import useStore from "../../store";
+import DOMPurify from "dompurify";
 
 const ProductPage = () => {
   const router = useRouter();
@@ -28,7 +29,13 @@ const ProductPage = () => {
         />
         <div className="w-full md:w-1/2">
           <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-          <p className="text-gray-700 mb-4">{product.description}</p>
+          {/* Safely render the sanitized description */}
+          <div
+            className="text-gray-700 mb-4"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(product.description),
+            }}
+          />
           <p className="text-2xl font-semibold text-green-600 mb-6">
             ৳{product.price}
           </p>

@@ -105,6 +105,7 @@ const Cart = () => {
             >
               Buy Now
             </button>
+            
           </div>
 
           {/* Checkout Button */}
