@@ -2,20 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.excel-table th,
+.excel-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+.excel-table th {
+  background-color: #f2f2f2;
+  color: black;
+}
+
+.excel-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.excel-table tr:hover {
+  background-color: #ddd;
+}
+
+.print-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.print-button:hover {
+  background-color: #45a049;
 }
